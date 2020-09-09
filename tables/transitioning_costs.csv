@@ -1,0 +1,15 @@
+current,pasture,crop
+grass,0.355,0.7
+tree,11.605,11.7
+lichen,0.605,0.7
+barren,0.355,0.45
+crop,2.855,0.45
+sparse,0.605,0.7
+ice,0,0
+mosaic,2.855,2.95
+water,0,0
+shrub,2.855,2.95
+urban,0,0
+na,0,0
+intact,0,0
+protected,0,0

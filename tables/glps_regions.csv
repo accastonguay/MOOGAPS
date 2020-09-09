@@ -1,0 +1,263 @@
+region,group,ADM0_A3
+EUR,Baltic,EST
+EUR,Baltic,LVA
+EUR,Baltic,LTU
+EUR,East Europe,BGR
+EUR,East Europe,CZE
+EUR,East Europe,HUN
+EUR,East Europe,POL
+EUR,East Europe,ROU
+EUR,East Europe,SVK
+EUR,East Europe,SVN
+EUR,West Europe,LIE
+EUR,West Europe,AUT
+EUR,West Europe,BEL
+EUR,West Europe,DEU
+EUR,West Europe,MCO
+EUR,West Europe,FRA
+EUR,West Europe,MAF
+EUR,West Europe,NCL
+EUR,West Europe,SPM
+EUR,West Europe,PYF
+EUR,West Europe,ATF
+EUR,West Europe,BLM
+EUR,West Europe,WLF
+EUR,West Europe,CLP
+EUR,West Europe,LUX
+EUR,West Europe,SXM
+EUR,West Europe,NLD
+EUR,West Europe,CUW
+EUR,West Europe,ABW
+EUR,North Europe,DNK
+EUR,North Europe,GRL
+EUR,North Europe,FRO
+EUR,North Europe,FIN
+EUR,North Europe,ALD
+EUR,North Europe,IRL
+EUR,North Europe,SWE
+EUR,North Europe,ESB
+EUR,North Europe,GBR
+EUR,North Europe,GIB
+EUR,North Europe,WSB
+EUR,North Europe,TCA
+EUR,North Europe,PCN
+EUR,North Europe,MSR
+EUR,North Europe,AIA
+EUR,North Europe,VGB
+EUR,North Europe,CYM
+EUR,North Europe,BMU
+EUR,North Europe,SHN
+EUR,North Europe,JEY
+EUR,North Europe,GGY
+EUR,North Europe,IMN
+EUR,North Europe,IOT
+EUR,North Europe,SGS
+EUR,North Europe,FLK
+EUR,South Europe,CNM
+EUR,South Europe,CYN
+EUR,South Europe,CYP
+EUR,South Europe,GRC
+EUR,South Europe,SMR
+EUR,South Europe,VAT
+EUR,South Europe,ITA
+EUR,South Europe,MLT
+EUR,South Europe,PRT
+EUR,South Europe,AND
+EUR,South Europe,ESP
+EUR,Former USSR,ARM
+EUR,Former USSR,AZE
+EUR,Former USSR,BLR
+EUR,Former USSR,GEO
+EUR,Former USSR,KAZ
+EUR,Former USSR,KAB
+EUR,Former USSR,KGZ
+EUR,Former USSR,MDA
+EUR,Former USSR,RUS
+EUR,Former USSR,TJK
+EUR,Former USSR,TKM
+EUR,Former USSR,UKR
+EUR,Former USSR,NA
+EUR,Former USSR,UZB
+EUR,Balkans,ALB
+EUR,Balkans,BIH
+EUR,Balkans,HRV
+EUR,Balkans,MKD
+EUR,Balkans,MNE
+EUR,Balkans,KOS
+EUR,Balkans,SRB
+EUR,Rest of Europe,NA
+EUR,Rest of Europe,ISL
+EUR,Rest of Europe,NOR
+EUR,Rest of Europe,CHE
+OCE,Pacific islands,NA
+OCE,ANZ,AUS
+OCE,ANZ,HMD
+OCE,ANZ,IOA
+OCE,ANZ,NFK
+OCE,ANZ,CSI
+OCE,ANZ,ATC
+OCE,ANZ,NZL
+OCE,ANZ,COK
+OCE,ANZ,NIU
+OCE,Pacific islands,FJI
+OCE,Pacific islands,KIR
+OCE,Pacific islands,PNG
+OCE,Pacific islands,WSM
+OCE,Pacific islands,SLB
+OCE,Pacific islands,MHL
+OCE,Pacific islands,NRU
+OCE,Pacific islands,TUV
+OCE,Pacific islands,TON
+OCE,Pacific islands,FSM
+OCE,Pacific islands,PLW
+OCE,Pacific islands,VUT
+NAM,Canada,CAN
+NAM,Canada,NA
+NAM,United States,USA
+NAM,United States,UMI
+NAM,United States,VIR
+NAM,United States,PRI
+NAM,United States,ASM
+NAM,United States,GUM
+NAM,United States,MNP
+LAM,Rest of Centr. America,PAN
+LAM,Rest of Centr. America,TTO
+LAM,Rest of Centr. America,NA
+LAM,Rest of Centr. America,VCT
+LAM,Rest of Centr. America,LCA
+LAM,Rest of Centr. America,KNA
+LAM,Rest of Centr. America,NA
+LAM,Rest of Centr. America,NA
+LAM,Rest of Centr. America,ATG
+LAM,Rest of Centr. America,NA
+LAM,Brazil,BRA
+LAM,Mexico,MEX
+LAM,Rest of Centr. America,BHS
+LAM,Rest of Centr. America,BRB
+LAM,Rest of Centr. America,BLZ
+LAM,Rest of Centr. America,NA
+LAM,Rest of Centr. America,CRI
+LAM,Rest of Centr. America,USG
+LAM,Rest of Centr. America,CUB
+LAM,Rest of Centr. America,DMA
+LAM,Rest of Centr. America,DOM
+LAM,Rest of Centr. America,SLV
+LAM,Rest of Centr. America,GRD
+LAM,Rest of Centr. America,GTM
+LAM,Rest of Centr. America,HTI
+LAM,Rest of Centr. America,HND
+LAM,Rest of Centr. America,JAM
+LAM,Rest of Centr. America,NIC
+LAM,Rest of Centr. America,NA
+LAM,Rest of South America,ARG
+LAM,Rest of South America,BOL
+LAM,Rest of South America,CHL
+LAM,Rest of South America,COL
+LAM,Rest of South America,ECU
+LAM,Rest of South America,GUY
+LAM,Rest of South America,PRY
+LAM,Rest of South America,PER
+LAM,Rest of South America,SUR
+LAM,Rest of South America,URY
+LAM,Rest of South America,VEN
+EAS,China,CHN
+EAS,China,HKG
+EAS,China,MAC
+EAS,Japan,JPN
+EAS,China,TWN
+EAS,South Korea,KOR
+SEA,Insular SEA,BRN
+SEA,Insular SEA,IDN
+SEA,Insular SEA,SGP
+SEA,Insular SEA,MYS
+SEA,Insular SEA,MMR
+SEA,Insular SEA,PHL
+SEA,Insular SEA,THA
+SEA,Continental SEA,KHM
+SEA,Continental SEA,PRK
+SEA,Continental SEA,LAO
+SEA,Continental SEA,MNG
+SEA,Continental SEA,TLS
+SEA,Continental SEA,VNM
+SAS,India,KAS
+SAS,India,NA
+SAS,India,IND
+SAS,Rest of South Asia,AFG
+SAS,Rest of South Asia,BGD
+SAS,Rest of South Asia,BTN
+SAS,Rest of South Asia,MDV
+SAS,Rest of South Asia,NPL
+SAS,Rest of South Asia,PAK
+SAS,Rest of South Asia,LKA
+MNA,"Mid. east, North Africa",DZA
+MNA,"Mid. east, North Africa",BHR
+MNA,"Mid. east, North Africa",EGY
+MNA,"Mid. east, North Africa",IRN
+MNA,"Mid. east, North Africa",IRQ
+MNA,"Mid. east, North Africa",ISR
+MNA,"Mid. east, North Africa",PSX
+MNA,"Mid. east, North Africa",JOR
+MNA,"Mid. east, North Africa",KWT
+MNA,"Mid. east, North Africa",LBN
+MNA,"Mid. east, North Africa",LBY
+MNA,"Mid. east, North Africa",MAR
+MNA,"Mid. east, North Africa",SAH
+MNA,"Mid. east, North Africa",OMN
+MNA,"Mid. east, North Africa",QAT
+MNA,"Mid. east, North Africa",NA
+MNA,"Mid. east, North Africa",SAU
+MNA,"Mid. east, North Africa",SYR
+MNA,"Mid. east, North Africa",TUN
+MNA,"Mid. east, North Africa",ARE
+MNA,"Mid. east, North Africa",YEM
+MNA,Turkey,TUR
+SSA,Congo basin,CMR
+SSA,Congo basin,CAF
+SSA,Congo basin,COG
+SSA,Congo basin,GAB
+SSA,Congo basin,GNQ
+SSA,Congo basin,COD
+SSA,East Africa,BDI
+SSA,East Africa,ETH
+SSA,East Africa,KEN
+SSA,East Africa,RWA
+SSA,East Africa,TZA
+SSA,East Africa,UGA
+SSA,South Africa,ZAF
+SSA,Rest of South Africa,AGO
+SSA,Rest of South Africa,BWA
+SSA,Rest of South Africa,COM
+SSA,Rest of South Africa,LSO
+SSA,Rest of South Africa,SYC
+SSA,Rest of South Africa,MDG
+SSA,Rest of South Africa,MWI
+SSA,Rest of South Africa,MUS
+SSA,Rest of South Africa,MOZ
+SSA,Rest of South Africa,NAM
+SSA,Rest of South Africa,SWZ
+SSA,Rest of South Africa,ZMB
+SSA,Rest of South Africa,ZWE
+SSA,West Africa,BEN
+SSA,West Africa,BFA
+SSA,West Africa,CPV
+SSA,West Africa,TCD
+SSA,West Africa,CIV
+SSA,West Africa,DJI
+SSA,West Africa,ERI
+SSA,West Africa,GMB
+SSA,West Africa,GHA
+SSA,West Africa,GIN
+SSA,West Africa,GNB
+SSA,West Africa,LBR
+SSA,West Africa,MLI
+SSA,West Africa,MRT
+SSA,West Africa,NER
+SSA,West Africa,NGA
+SSA,West Africa,SEN
+SSA,West Africa,SLE
+SSA,West Africa,SOM
+SSA,West Africa,SDN
+SSA,West Africa,TGO
+SSA,West Africa,SOL
+SSA,West Africa,STP
+SSA,West Africa,SDS
