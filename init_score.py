@@ -1439,6 +1439,7 @@ def main(export_folder ='.', optimisation_method= 'weighted_sum', lam = 0.5, dem
     cols.append('ADM0_A3')
 
     grid[cols + ['ADM0_A3', 'id', 'opp_nataff', 'opp_manaff', 'affor_cost', 'opport_soc']].to_csv('score_init.csv', index = False)
+    logger.info('Done exporting score_init.csv')
 
 
 def parallelise(export_folder, optimisation_method, job_nmr, feed_option):
