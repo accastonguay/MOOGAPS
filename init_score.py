@@ -999,10 +999,8 @@ def scoring(feats, optimisation_method, crop_yield, lam, beef_yield, aff_scenari
                     # Qty exported (t) = Suitable area (ha) * crop area fraction * crop yield (t/ha) * yield gap (%) * export fraction
                     qty_exported = ((feats[l + '_area'].values * feats[['ADM0_A3']].merge(
                         foddercrop_area[['ADM0_A3', f + '_area']], how="left")[f + '_area'].values * \
-                                     # feats[['climate_bin']].merge(fodder_potential_yields[['climate_bin', f]],
-                                     #                              how="left")[f + '_potential'].values * \
                         feats[f].values * feats[['ADM0_A3']].merge(fodder_yield_fraction, how="left")[f].values)) * \
-                                   feats[['ADM0_A3']].merge([['ADM0_A3', f]], how="left")[f].values * grain_adjustment
+                                   feats[['ADM0_A3']].merge(percent_exported[['ADM0_A3', f]], how="left")[f].values * grain_adjustment
 
                 if feed_option == "v2":
                     # Qty exported (t) = (Suitable area (ha) * crop area fraction * crop yield (t/ha) * yield gap (%)) - production for other uses (t) * export fraction
