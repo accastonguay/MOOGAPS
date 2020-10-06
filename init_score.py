@@ -91,6 +91,8 @@ months = ["efftemp0" + str(i) for i in range(1, 10)] + ["efftemp10", "efftemp11"
 
 # column names for optimal costs/emissions sources
 new_colnames = {'production': '_meat',
+                'BII_cost_production': '_meat',
+                'BII_ghg_production': '_meat',
                 'enteric': '_meth',
                 'manure': '_manure',
                 'export_emissions': '_exp_emiss',
@@ -221,11 +223,23 @@ def weighted_score(feats, l, lam, optimisation_method):
     rel_cost = np.where(feats[l + '_meat'] < 1, np.NaN,
                         feats[l + '_tot_cost'] / (feats[l + '_meat']))
 
+    ######################### Added by Katie ######################################
+    # Calculate relative BII (BII/meat)(unitless/ton)
+    feats['lbii_sa'] = (feats['suitable_area']/feats['area']) * (feats["lbii"])
+    # Annualise the BII loss from pristine state
+    feats['lbii_sa_change'] = 1 - feats['lbii_sa'].values
+    feats['lbii_sa_annual_change'] = eac(feats['lbii_sa_change'], rate=0)
+    rel_BII = np.where(feats[l + '_meat'] < 1, np.NaN, feats['lbii_sa_annual_change'].values / (feats[l + '_meat']))
+    #################### End of added bu Katie ######################################
+
     if optimisation_method == 'carbon_price':
         lam = lam / 1000.
 
     feats[l + '_score'] = (rel_ghg * (1 - lam)) + (rel_cost * lam)
-
+    ##### Added by Katie #######
+    feats[l + '_BII_cost_score'] = (rel_BII * (1 - lam)) + (rel_cost * lam)
+    feats[l + '_BII_ghg_score'] = (rel_BII * (1 - lam)) + (rel_ghg * lam)
+    ##### End added by Katie ###
     return feats
 
 def scoring(feats, optimisation_method, crop_yield, lam, beef_yield, aff_scenario, logger, feed_option, landuses):
@@ -261,7 +275,7 @@ def scoring(feats, optimisation_method, crop_yield, lam, beef_yield, aff_scenari
 
     ################## SOC and AGB change from removing current beef ##################
     # Get percentage change of grassland and cropland to 'original' ecoregion
-    soc_change = feats[['ecoregions']].merge(sc_change[['code', 'grassland', 'cropland']], how='left', 
+    soc_change = feats[['ecoregions']].merge(sc_change[['code', 'grassland', 'cropland']], how='left',
                                              left_on='ecoregions', right_on='code')
 
     # 'Opportunity cost' of soil carbon = sum over land uses of current area of land use * current soil carbon * percentage change * negative emission (-1)
@@ -483,11 +497,19 @@ def scoring(feats, optimisation_method, crop_yield, lam, beef_yield, aff_scenari
             grasslu = np.nanargmin(np.ma.masked_array(feats[[g + '_score' for g in grass_cols]].values,
                                                       np.isnan(feats[[g + '_score' for g in
                                                                       grass_cols]].values)), axis=1)
+            # Added by Katie ========================================================================
+            grasslu_BII_cost = np.nanargmin(np.ma.masked_array(feats[[g + '_BII_cost_score' for g in grass_cols]].values,
+                                                      np.isnan(feats[[g + '_BII_cost_score' for g in
+                                                                      grass_cols]].values)), axis=1)
+            grasslu_BII_ghg = np.nanargmin(np.ma.masked_array(feats[[g + '_BII_ghg_score' for g in grass_cols]].values,
+                                                      np.isnan(feats[[g + '_BII_ghg_score' for g in
+                                                                      grass_cols]].values)), axis=1)
+            # End added by Katie ====================================================================
 
             # Select biomass production from best grassland landuse for roughage
             grasscol = np.take_along_axis(feats[[lu for lu in grass_cols]].values,
                                                         grasslu[:, None], axis=1).flatten()
-            
+
             # Set grass production = grazing proportion area * available area * grazing (t/ha)
             grazing_production = grazing_prop_area * feats['available_area'].values * grasscol
 
@@ -563,7 +585,7 @@ def scoring(feats, optimisation_method, crop_yield, lam, beef_yield, aff_scenari
             feats[l + '_BM'] = feats['grain_grainBM'] + feats['grain_grassBM']
 
             # Biomass consumed for domestic production (t) = actual production (t) x (1 - fraction exported feed)
-            biomass_dom = grain_prod * (1 - feats[['ADM0_A3']].merge(percent_exported[['ADM0_A3'] + foddercrop_list], 
+            biomass_dom = grain_prod * (1 - feats[['ADM0_A3']].merge(percent_exported[['ADM0_A3'] + foddercrop_list],
                                                                      how="left").drop('ADM0_A3', axis=1).values)
 
             # Biomass consumed for domestic production (t) = actual production (t) x fraction exported feed
@@ -573,8 +595,8 @@ def scoring(feats, optimisation_method, crop_yield, lam, beef_yield, aff_scenari
             # Subset ME in conversion per region and climate
             subset_table = energy_conversion.loc[energy_conversion.feed == 'mixed'][['group', 'glps', beef_yield,
                                                                                      'curr_methane', 'curr_manure']]
-            
-            # Meat production (t) = sum across feeds (Domestic biomass (t) x ME in feed (MJ/kd DM)) x ME to beef conversion ratio * dressing (%)      
+
+            # Meat production (t) = sum across feeds (Domestic biomass (t) x ME in feed (MJ/kd DM)) x ME to beef conversion ratio * dressing (%)
             grass_meat = feats['grain_grassBM'].values * feats.merge(grass_energy, how='left', left_on=['region', 'glps'], right_on=['region', 'glps'])['ME'].values * \
                    feats[['group', 'glps']].merge(subset_table, how='left', left_on=['group', 'glps'], right_on=['group', 'glps'])[beef_yield].values * dressing
 
@@ -601,7 +623,7 @@ def scoring(feats, optimisation_method, crop_yield, lam, beef_yield, aff_scenari
             local_manure = (np.nansum(biomass_dom, axis=1) + feats['grain_grassBM'].values) * \
                         feats[['group', 'glps']].merge(subset_table, how='left', left_on=['group', 'glps'],
                                                        right_on=['group', 'glps'])['curr_manure'].values
-            
+
             # Calculate nitrous N2O (ton) = Actual production (ton) x fertiliser requirement (kg) x crop_emission factors (% per thousand)
             # feats[l + '_n2o'] = np.nansum(total_prod * grain_perc* fertiliser_requirement['fertiliser'].values[None, :] * (
             #         crop_emissions_factors['factor'].values[None, :] / 100), axis=1)
@@ -754,15 +776,12 @@ def scoring(feats, optimisation_method, crop_yield, lam, beef_yield, aff_scenari
             feats[l + '_cost'] = local_cost
             feats[l + '_trans_cost'] = beef_trans_cost + feed_to_port_cost + exp_costs + trancost_partner_ls
             feats[l + '_trans_emiss'] = beef_trans_emiss + feed_to_port_emis + sea_emissions_ls + emissions_partner_ls
-
             cstock_grain = np.where(feats['newarea'].values == 1,
                                             feats['agb_spawn'].values * 3.67 * feats[l + '_area'].values,
                                             0)
             cstock_grass = np.take_along_axis(feats[[lu + '_cstock' for lu in grass_cols]].values, grasslu[:, None], axis=1).flatten()
-
             # 0 C stock for grain. For grass, take cstock from the best grass land use and multiply by the fraction of area
             feats[l + '_cstock'] = cstock_grass * (grass_area/grassarea2) + cstock_grain
-
             # Calculate change in below ground biomass for pasture/tree to grain ans and grain/tree to pasture
             bgb_change_grain = (((-0.59 * feats['pasture_area'] * feats['bgb_spawn']) + (
                     -0.42 * feats['tree_area'] * feats['bgb_spawn'])) * 3.67 * -1) * grain_area / \
@@ -771,7 +790,6 @@ def scoring(feats, optimisation_method, crop_yield, lam, beef_yield, aff_scenari
             bgb_change_grass = ((0.19 * feats['crop_area'] * feats['bgb_spawn']) + (
                         0.08 * feats['tree_area'] * feats['bgb_spawn'])) * 3.67 * -1 * grass_area / \
                                feats['suitable_area']
-
             # Calculate total change in below ground biomass
             feats[l + '_bgb_change'] = eac(bgb_change_grain + bgb_change_grass, rate=0)
 
@@ -786,6 +804,13 @@ def scoring(feats, optimisation_method, crop_yield, lam, beef_yield, aff_scenari
             feats[l + '_score'] = np.where((feats['grain_grassBM'] == 0) | (feats['grain_grainBM'] == 0),
                 np.nan, feats[l + '_score'].values)
 
+            # Added by Katie ========================================================================
+            feats[l + '_BII_cost_score'] = np.where((feats['grain_grassBM'] == 0) | (feats['grain_grainBM'] == 0),
+                np.nan, feats[l + '_BII_cost_score'].values)
+            feats[l + '_BII_ghg_score'] = np.where((feats['grain_grassBM'] == 0) | (feats['grain_grainBM'] == 0),
+                np.nan, feats[l + '_BII_ghg_score'].values)
+            # End added by Katie ====================================================================
+
             del beef_trans_emiss, feed_to_port_emis, sea_emissions_ls, emissions_partner_ls, \
                 beef_trans_cost, feed_to_port_cost, exp_costs, trancost_partner_ls, local_cost, manure_abroad, \
                 local_manure, methane_abroad, local_methane, meat_abroad, local_meat, ntrips_beef_mkt, ntrips_feed_exp, \
@@ -795,6 +820,15 @@ def scoring(feats, optimisation_method, crop_yield, lam, beef_yield, aff_scenari
             grasslu = np.nanargmin(np.ma.masked_array(feats[[g + '_score' for g in grass_cols]].values,
                                                       np.isnan(feats[[g + '_score' for g in
                                                                       grass_cols]].values)), axis=1)
+
+            # Added by Katie ========================================================================
+            grasslu_BII_cost = np.nanargmin(np.ma.masked_array(feats[[g + '_BII_cost_score' for g in grass_cols]].values,
+                                                      np.isnan(feats[[g + '_BII_cost_score' for g in
+                                                                      grass_cols]].values)), axis=1)
+            grasslu_BII_ghg = np.nanargmin(np.ma.masked_array(feats[[g + '_BII_ghg_score' for g in grass_cols]].values,
+                                                      np.isnan(feats[[g + '_BII_ghg_score' for g in
+                                                                      grass_cols]].values)), axis=1)
+            # End added by Katie ====================================================================
 
             feats['stover_grass_grassBM'] = np.take_along_axis(feats[[lu + '_BM' for lu in grass_cols]].values,
                                                         grasslu[:, None], axis=1).flatten()
@@ -1121,8 +1155,15 @@ def scoring(feats, optimisation_method, crop_yield, lam, beef_yield, aff_scenari
             feats[l + '_score'] = np.where((feats['stover_grain_grainBM'] == 0) | (feats['stover_grain_stoverBM'] == 0),
                                           np.nan, feats[l + '_score'].values)
 
+            # Added by Katie ========================================================================
+            feats[l + '_BII_cost_score'] = np.where((feats['stover_grain_grainBM'] == 0) | (feats['stover_grain_stoverBM'] == 0),
+                                          np.nan, feats[l + '_BII_cost_score'].values)
+            feats[l + '_BII_ghg_score'] = np.where((feats['stover_grain_grainBM'] == 0) | (feats['stover_grain_stoverBM'] == 0),
+                                          np.nan, feats[l + '_BII_ghg_score'].values)
+            # End added by Katie ====================================================================
+
     else:
-        logger.inf('Feed option {} not in choices'.format(feed_option))
+        logger.info('Feed option {} not in choices'.format(feed_option))
     # Drop monthly temperature and other crop uses columns
     # feats = feats.drop(months + ['diff_' + crop for crop in crop_list], axis=1)
     # feats = feats.drop(months, axis=1)
@@ -1132,19 +1173,30 @@ def scoring(feats, optimisation_method, crop_yield, lam, beef_yield, aff_scenari
 
     # Only keep cells where at least 1 feed option produces meat
     feats = feats.loc[feats[[l + '_meat' for l in landuses]].sum(axis=1) > 0]
-
     # Drop rows where no land use has a score (all NAs)
     feats = feats.dropna(how='all', subset=[l + '_score' for l in landuses])
-
     # Select lowest score
     feats['best_score'] = np.nanmin(feats[[l + '_score' for l in landuses]].values, axis=1)
-
+    # Added by Katie ========================================================================
+    feats['BII_cost_best_score'] = np.nanmin(feats[[l + '_BII_cost_score' for l in landuses]].values, axis=1)
+    feats['BII_ghg_best_score'] = np.nanmin(feats[[l + '_BII_ghg_score' for l in landuses]].values, axis=1)
+    # End added by Katie ====================================================================
     try:
         # Select position (land use) of lowest score
         feats['bestlu'] = np.nanargmin(feats[[l + '_score' for l in landuses]].values, axis=1)
+        # Added by Katie ========================================================================
+        feats['BII_cost_bestlu'] = np.nanargmin(feats[[l + '_BII_cost_score' for l in landuses]].values, axis=1)
+        feats['BII_ghg_bestlu'] = np.nanargmin(feats[[l + '_BII_ghg_score' for l in landuses]].values, axis=1)
+        # End added by Katie ====================================================================
+
     except:
         # If there is no best land use, export dataframe
         feats.loc[feats.best_score.isna()].drop('geometry', axis=1).to_csv("nadf.csv", index=False)
+        # Added by Katie ========================================================================
+        feats.loc[feats.BII_cost_best_score.isna()].drop('geometry', axis=1).to_csv("nadf.csv", index=False)
+        feats.loc[feats.BII_ghg_best_score.isna()].drop('geometry', axis=1).to_csv("nadf.csv", index=False)
+        print(feats)
+        # End added by Katie ====================================================================
 
     # del list_scores, allArrays
 
@@ -1155,8 +1207,20 @@ def scoring(feats, optimisation_method, crop_yield, lam, beef_yield, aff_scenari
     for cname in ['production']:
         feats[cname] = np.take_along_axis(feats[[lu + new_colnames[cname] for lu in landuses]].values,
                                           feats['bestlu'].values[:, None], axis=1).flatten()
-
     return feats
+
+    # Added by Katie ========================================================================
+    for cname in ['BII_cost_production']:
+        feats[cname] = np.take_along_axis(feats[[lu + new_colnames[cname] for lu in landuses]].values,
+                                          feats['BII_cost_bestlu'].values[:, None], axis=1).flatten()
+    return feats
+    for cname in ['BII_ghg_production']:
+        feats[cname] = np.take_along_axis(feats[[lu + new_colnames[cname] for lu in landuses]].values,
+                                          feats['BII_ghg_bestlu'].values[:, None], axis=1).flatten()
+    return feats
+
+    # End added by Katie ====================================================================
+
 
 def trade(feats, optimisation_method, lam, feed_option, landuses):
     """
@@ -1208,7 +1272,10 @@ def trade(feats, optimisation_method, lam, feed_option, landuses):
 
     # Drop rows where columns are all nas
     feats = feats.dropna(how='all', subset=[lu + '_score' for lu in landuses])
-
+    # Added by Katie ========================================================================
+    feats = feats.dropna(how='all', subset=[lu + '_BII_cost_score' for lu in landuses])
+    feats = feats.dropna(how='all', subset=[lu + '_BII_ghg_score' for lu in landuses])
+    # End added by Katie ====================================================================
     # make sure that dataframe is not empty
     if feats.shape[0] > 0:
         if optimisation_method == 'carbon_price':
@@ -1219,26 +1286,56 @@ def trade(feats, optimisation_method, lam, feed_option, landuses):
         rel_cost = np.where(feats[l + '_meat'] < 1, np.NaN,
                             feats[l + '_tot_cost'] / (feats[l + '_meat']))
 
-        feats[l + '_score'] = (rel_ghg * (1 - lam)) + (rel_cost * lam)
+        # Added by Katie ========================================================================
+        # Annualise the BII loss
+        feats['lbii_sa_change'] = 1 - feats['lbii_sa'].values
+        feats['lbii_sa_annual_change'] = eac(feats['lbii_sa_change'], rate=0)
+        rel_BII = np.where(feats[l + '_meat'] < 1, np.NaN, feats['lbii_sa_annual_change'].values / (feats[l + '_meat']))
+        # End added by Katie ==========================================================================
 
+        feats[l + '_score'] = (rel_ghg * (1 - lam)) + (rel_cost * lam)
         feats['best_score'] = np.nanmin(feats[[l + '_score' for l in landuses]].values, axis=1)
+
+        # Added by Katie ========================================================================
+        feats[l + '_BII_cost_score'] = (rel_BII * (1 - lam)) + (rel_cost * lam)
+        feats[l + '_BII_ghg_score'] = (rel_BII * (1 - lam)) + (rel_ghg * lam)
+        feats['BII_cost_best_score'] = np.nanmin(feats[[l + '_BII_cost_score' for l in landuses]].values, axis=1)
+        feats['BII_ghg_best_score'] = np.nanmin(feats[[l + '_BII_ghg_score' for l in landuses]].values, axis=1)
+        # End added by Katie ====================================================================
 
         try:
             # Select position (land use) of lowest score
             feats['bestlu'] = np.nanargmin(feats[[l + '_score' for l in landuses]].values, axis=1)
+            # Added by Katie ========================================================================
+            feats['BII_cost_bestlu'] = np.nanargmin(feats[[l + '_BII_cost_score' for l in landuses]].values, axis=1)
+            feats['BII_ghg_bestlu'] = np.nanargmin(feats[[l + '_BII_ghg_score' for l in landuses]].values, axis=1)
+            # End added by Katie ====================================================================
+
         except:
             # If there is no best land use, export dataframe
             feats.loc[feats.best_score.isna()].drop('geometry', axis=1).to_csv("nadf.csv", index=False)
+            # Added by Katie ========================================================================
+            feats.loc[feats.BII_cost_best_score.isna()].drop('geometry', axis=1).to_csv("nadf.csv", index=False)
+            feats.loc[feats.BII_ghg_best_score.isna()].drop('geometry', axis=1).to_csv("nadf.csv", index=False)
+            # End added by Katie ========================================================================
 
         # Write new columns according to optimal land use
         for cname in ['production']:
             feats[cname] = np.take_along_axis(feats[[lu + new_colnames[cname] for lu in landuses]].values,
-                                              feats['bestlu'].values[:, None], axis=1).flatten()
+                                            feats['bestlu'].values[:, None], axis=1).flatten()
         return feats
 
-def export_raster(grid, resolution, export_column, export_folder, constraint, crop_yield, beef_yield,
-                  lam, demand_scenario, feed_option, aff_scenario):
-
+        # Added by Katie ========================================================================
+        for cname in ['BII_cost_production']:
+            feats[cname] = np.take_along_axis(feats[[lu + new_colnames[cname] for lu in landuses]].values,
+                                              feats['BII_cost_bestlu'].values[:, None], axis=1).flatten()
+        return feats
+        for cname in ['BII_ghg_production']:
+            feats[cname] = np.take_along_axis(feats[[lu + new_colnames[cname] for lu in landuses]].values,
+                                              feats['BII_ghg_bestlu'].values[:, None], axis=1).flatten()
+        return feats
+        # End added by Katie ========================================================================
+def export_raster(grid, resolution, export_column, export_folder, constraint, crop_yield, beef_yield, lam, demand_scenario, feed_option, aff_scenario):
     """
     Function to rasterize columns of a dataframe
 
@@ -1281,7 +1378,7 @@ def export_raster(grid, resolution, export_column, export_folder, constraint, cr
             }
         # for m in meta: print(m, meta[m])
         out_fn = export_folder + '/' + constraint + "_" + str(crop_yield) + '_' + beef_yield + '_' + str(lam) + '_' + demand_scenario + '_' + feed_option + '_' + aff_scenario + ".tif"
-          
+
         with rasterio.open(out_fn, 'w', **meta) as out:
             # Create a generator for geom and value pairs
             grid_cell = ((geom, value) for geom, value in zip(grid.geometry, grid[i]))
@@ -1292,11 +1389,13 @@ def export_raster(grid, resolution, export_column, export_folder, constraint, cr
             print("Burned value dtype: {}".format(burned.dtype))
             out.write_band(1, burned)
 
+
+
 def main(export_folder ='.', optimisation_method= 'weighted_sum', lam = 0.5, demand_scenario = 'Demand',
          crop_yield = 0, beef_yield ='me_to_meat', constraint ='global', aff_scenario = "no_aff", feed_option ='v1', trade_scenario ='trade'):
     """
     Main function that optimises beef production for a given location and resolution, using a given number of cores.
-    
+
     Arguments:
     export_folder (str)-> folder where the output file is exported
     optimisation_method (str)-> Method for optimisation ('weighted_sum' or 'carbon_price')
@@ -1310,12 +1409,11 @@ def main(export_folder ='.', optimisation_method= 'weighted_sum', lam = 0.5, dem
 
     Output: Writes the grid as GPKG file
     """
-
     LOG_FORMAT = "%(asctime)s - %(message)s"
     try:
         logging.basicConfig(
             # filename="/home/uqachare/model_file/logs_opt/opt_" + constraint + "_" + str(crop_yield) + "_" + me_to_meat + "_" + str(lam) + '_' + dem +".log",
-            filename="/home/uqachare/model_file/test_" + feed_option + ".log",
+            filename="/media/sf_MOOGAPS/BII_test_" + feed_option + ".log",
             level=logging.INFO,
             format=LOG_FORMAT,
             filemode='w')
@@ -1329,13 +1427,17 @@ def main(export_folder ='.', optimisation_method= 'weighted_sum', lam = 0.5, dem
     logger.info("Start loading grid")
 
     import sqlite3
-    conn = sqlite3.connect("grid.gpkg")
-    grid = pd.read_sql_query("SELECT * FROM grid", conn)
+    conn = sqlite3.connect("./grid.gpkg")
+    logger.info("hello")
+    grid = pd.read_sql_query("SELECT * FROM grid WHERE ADM0_A3 = 'NZL'", conn)
     conn.close()
+    logger.info("goodbye")
+#    grid['centroid_column'] = grid.centroid
 
-    # grid = gpd.read_file("grid.gpkg")
-    # grid = grid.loc[grid.ADM0_A3 == 'BEL']
-    # grid = grid.reset_index(drop=True)
+    logger.info("oh you did it")
+    #grid = gpd.read_file("grid.gpkg")
+    #grid = grid.loc[grid.ADM0_A3 == 'GER']
+    #grid = grid.reset_index(drop=True)
 
     logger.info("Done loading grid, memory usage of grid = {}".format(grid.memory_usage().sum()*1e-6))
 
@@ -1433,12 +1535,13 @@ def main(export_folder ='.', optimisation_method= 'weighted_sum', lam = 0.5, dem
 
     # Select only cells columns of meat production, emissions, costs and country column to export
     cols = []
+    print(landuses)
     for l in landuses:
         for i in ['_meat', '_ghg', '_tot_cost', '_exp_emiss', '_exp_costs']:
             cols.append(l+i)
     cols.append('ADM0_A3')
-
     grid[cols + ['ADM0_A3', 'id', 'opp_nataff', 'opp_manaff', 'affor_cost', 'opport_soc']].to_csv('score_init.csv', index = False)
+    grid.to_csv('score_init.csv', index = False)
     logger.info('Done exporting score_init.csv')
 
 
