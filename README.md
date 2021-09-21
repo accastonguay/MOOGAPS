@@ -6,3 +6,4 @@ It is open source and fully written in Python. It can simulate the current enoco
 ## Shiny App
 Results for the optimisation can be explored and visualised through a Shiny app:
 
+https://accastonguay.shinyapps.io/beef_app/?_ga=2.4889779.1287726266.1632196766-708678029.1623720440
